@@ -46,7 +46,7 @@ numAlgos = 4;
 
 % sorts by mse of observations for blind testing
 % sorts by mse of original sources otherwise
-blindTest = false;
+blindTest = true;
 
 % define the metric used for choosing pairs to separate
 %metric = 'maxkld';
@@ -55,10 +55,10 @@ metric = 'mi';
 
 % define the way in which error is measured
 % mean squared error
-%errorFunc = @immse;
+errorFunc = @immse;
 
 % mean absolute error
-errorFunc = @mae;
+%errorFunc = @mae;
 
 
 % separate only non-zero mi/kld values if true
@@ -444,12 +444,18 @@ for pairIter = 1 : nPairs
         ipv4checksum = zeros(1,2);
 
         switch iterAlgo
+%             case 1
+%                 % Find the optimal scaling coefficients by maximizing the
+%                 % overlap of signal segments containing neighboring
+%                 % repetitions.
+%                 [scalingFactors_repeatingOverlaps(pairIter, :), bestScore, scaledSourceEstimate]  = ...
+%                  findScalingFactorByMaximizingSignalOverlap(...
+%                     testSource, icaEstimate, base, degree, field, false, icaAlgo);
             case 1
-                % Find the optimal scaling coefficients by maximizing the overlap of signal
-                % segments containing neighboring repetitions. 
-                [scalingFactors_repeatingOverlaps(pairIter, :), bestScore, scaledSourceEstimate]  = ...
-                 findScalingFactorByMaximizingSignalOverlap(...
-                    testSource, icaEstimate, base, degree, field, false, icaAlgo);
+                % ipv4 checksum
+                [scalingFactors_repeatingOverlaps(pairIter,:), ...
+                  scaledSourceEstimate] = ...
+                findScalingFactorByChecksum(icaEstimate, base, degree, field, icaAlgo);
              case 2
                 % mse minimization
                 [scalingFactors_mseMinimization(pairIter, :), bestScore, scaledSourceEstimate] = ...
@@ -591,7 +597,7 @@ for iterAlgo = 1 : numAlgos
             pctBits = pctBits_repeatingOverlaps;
             scalingFactors = scalingFactors_repeatingOverlaps;
             ipv4checksum = ipv4checksum_repeatingOverlaps;
-            figName = 'repeating_overlaps';
+            figName = 'ipv4_checksum';
         case 2
             mse_algo = mse_mseMinimization;
             pctBytes = pctBytes_mseMinimization;

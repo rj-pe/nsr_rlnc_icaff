@@ -41,23 +41,23 @@ numTests = 10000;
 zerosThreshold = 0.8;
 
 % specify the separation test parameters
-nPairs = 100;
+nPairs = 1000;
 numAlgos = 4;
 
 % sorts by mse of observations for blind testing
 % sorts by mse of original sources otherwise
-blindTest = false;
+blindTest = true;
 
 % define the metric used for choosing pairs to separate
-metric = 'kld';
-%metric = 'mi';
+%metric = 'kld';
+metric = 'mi';
 
 % define the way in which error is measured
 % mean squared error
-%errorFunc = @immse;
+errorFunc = @immse;
 
 % mean absolute error
-errorFunc = @mae;
+%errorFunc = @mae;
 
 
 % separate only non-zero mi/kld values if true
@@ -416,18 +416,25 @@ for pairIter = 1 : nPairs
         ipv4checksum = zeros(1,2);
 
         switch iterAlgo
+%              case 1
+%                  % Find the optimal scaling coefficients by maximizing the overlap of signal
+%                  % segments containing neighboring repetitions. 
+%                  [scalingFactors_repeatingOverlaps(pairIter, :), bestScore, scaledSourceEstimate]  = ...
+%                   findScalingFactorByMaximizingSignalOverlap(...
+%                      testSource, icaEstimate, base, degree, field, false, icaAlgo);
+
             case 1
-                % Find the optimal scaling coefficients by maximizing the overlap of signal
-                % segments containing neighboring repetitions. 
-                [scalingFactors_repeatingOverlaps(pairIter, :), bestScore, scaledSourceEstimate]  = ...
-                 findScalingFactorByMaximizingSignalOverlap(...
-                    testSource, icaEstimate, base, degree, field, false, icaAlgo);
-             case 2
+                % ipv4 checksum
+                [scalingFactors_repeatingOverlaps(pairIter,:), ...
+                  scaledSourceEstimate] = ...
+                findFactorByChecksum(icaEstimate, base, degree, field, icaAlgo);
+            case 2
                 % mse minimization
                 [scalingFactors_mseMinimization(pairIter, :), bestScore, scaledSourceEstimate] = ...
                  findMinMseScalingFactor(...
                     testSource, icaEstimate, base, degree, field, errorFunc, false, icaAlgo);
-             case 3
+             %{
+            case 3
                 % ip address overlap
                 [scalingFactors_ipAddressOverlap(pairIter, :), bestScore, scaledSourceEstimate] = ...
                  findScalingFactorByIpAddressMatching(...
@@ -458,6 +465,7 @@ for pairIter = 1 : nPairs
                 [scalingFactors_portNumberOverlap(pairIter, :), bestScore, scaledSourceEstimate] = ...
                  findScalingFactorByIpAddressMatching(...
                     portNumbers, icaEstimate, base, degree, field, false, icaAlgo);
+                %}
          end % end switch
 
         if strcmp(icaAlgo, 'cobICA')
@@ -563,7 +571,7 @@ for iterAlgo = 1 : numAlgos
             pctBits = pctBits_repeatingOverlaps;
             scalingFactors = scalingFactors_repeatingOverlaps;
             ipv4checksum = ipv4checksum_repeatingOverlaps;
-            figName = 'repeating_overlaps';
+            figName = 'ipv4_checksum';
         case 2
             mse_algo = mse_mseMinimization;
             pctBytes = pctBytes_mseMinimization;
