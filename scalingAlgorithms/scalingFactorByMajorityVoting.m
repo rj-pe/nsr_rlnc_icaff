@@ -11,13 +11,13 @@ rowLength = size(estimatedSource, 2);
 
 % information container has a page for each type of prior knowledge
 numInformationTypes = size(information, 3);
-numInformationUnits = size(information, 2);
+numInformationUnits = size(information, 1);
 numInformationTotal = numInformationTypes * numInformationUnits;
 
 % results container has an entry for each combination of 
 % information coordinate (row and page) and scaling factor
 results = ...
-  zeros(numInformationUnits, numSources, alphabetSize, numInformationTypes);
+  zeros(numInformationUnits, numSources, alphabetSize-1, numInformationTypes);
 
 % for each ICA output run the scaling search algorithms
 for iterEstSrc = 1 : numSources
@@ -28,13 +28,14 @@ for iterEstSrc = 1 : numSources
             vecMultGf(...
               iterSclCoeff, estimatedSource(iterEstSrc, :), field, icaAlgo);
         % for each information type run a scaling factor search
-        for iterInfoType 1 : numInformationTypes
+        for iterInfoType = 1 : numInformationTypes
             % for each unit of information present in the information type list
-            for iterInfoUnit = 1 : infoUnits(iterInfoType)
+            for iterInfoUnit = 1 : infoUnits(iterInfoType, 1)
             % check the current test source for a match
             results(iterInfoUnit, iterEstSrc, iterSclCoeff, iterInfoType) = ...
               any(...
-                strfind(testSource, information(iterInfoType,iterInfoUnit,:)));
+                strfind(testSource, information(...
+                iterInfoUnit, 1:infoUnits(iterInfoType, 2), iterInfoType)));
             end % iterInfoUnit
         end % iterInfoType
     end % iterSclCoeff
@@ -44,15 +45,15 @@ end % iterEstSrc
 % the longest matching sequence
 
 [value, coeff] = max( reshape( results(:, 1, :, :), [], numInformationTotal));
-[one, matchIdx] = max( value);
+[~, matchIdx] = max( value);
 scalingFactor(1) = coeff( matchIdx);
 
-clearvars value coeff one matchIdx
+clearvars value coeff matchIdx
 
 % reshape the results for the second source and pick the coefficient with 
 % the longest matching sequence
 [value, coeff] = max( reshape( results(:, 2, :, :), [], numInformationTotal));
-[one, matchIdx] = max( value);
+[~, matchIdx] = max( value);
 scalingFactor(2) = coeff( matchIdx);
 
 scaledSourceEstimate = zeros(numSources, rowLength);

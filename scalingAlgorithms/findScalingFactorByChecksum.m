@@ -15,11 +15,11 @@ for iterEstSrc = 1 : numSources
     % for each membber of the alphabet construct a test packet
     for iterSclCoeff = 1 : alphabetSize - 1    
         % for each information type run a scaling factor search
-        testSource = zeros(1, rowLength);
+        testSource = zeros(1, 40);
         testSource(1,:) = ...
-            vecMultGf(iterSclCoeff, estimatedSource(iterEstSrc, :), field, icaAlgo);
+            vecMultGf(iterSclCoeff, estimatedSource(iterEstSrc, 29:68), field, icaAlgo);
         % check the IPv4 checksum of the scaled estimate 
-        results(iterSclCoeff, iterEstSrc) = verifyIPv4Checksum(testSource);
+        results(iterSclCoeff, iterEstSrc) = verifyIPv4Checksum(testSource, 1);
     end
 end
 
