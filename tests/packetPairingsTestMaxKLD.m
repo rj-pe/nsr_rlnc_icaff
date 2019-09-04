@@ -5,53 +5,117 @@
 % filter out the ip address numbers from a wireshark list of resolved addresses
 % cat ipAddressesList |  awk {'print $4'} | sed 's/,//' | sed 's/\./ /g' | sed 's/[0-9]/ & /g' > ipList
 %{
-% store each packet in a matlab array
-packets1 = readmatrix('httpWithJpegs.txt','OutputType', 'char');
-packets2 = readmatrix('sessionPackets.txt', 'OutputType', 'char');
-packets3 = readmatrix('httpOver80211.txt', 'OutputType', 'char');
-packets = [packets1; packets2; packets3];
-clearvars packets1 packets2 packets3;
+udpTcp = true;
+if udpTcp
 
-% mix up the rows
-r = randperm(size(packets, 1));
-packets = packets(r, :);
+    packetsTcp = readmatrix('tcp.txt', 'OutputType', 'char');
+    packetsUdp = readmatrix('udp.txt','OutputType', 'char');
+    
+    r = randperm(size(packetsUdp, 1));
+    packetsUdp = packetsUdp(r, :);
+    
+    r = randperm(size(packetsTcp, 1));
+    packetsTcp = packetsTcp(r, :);
+    
+    packetlenUdp = strlength(packetsUdp, 1);
+    packetlenTcp = strlength(packetsTcp, 1);
+    maxPacketLengthUdp = max(packetlenUdp);
+    maxPacketLengthTcp = max(packetlenTcp);
+    
+else
+    % store each packet in a array
+    packets1 = readmatrix('httpWithJpegs.txt','OutputType', 'char');
+    packets2 = readmatrix('sessionPackets.txt', 'OutputType', 'char');
+    packets3 = readmatrix('httpOver80211.txt', 'OutputType', 'char');
+    packets = [packets1; packets2; packets3];
+    clearvars packets1 packets2 packets3;
+
+    % mix up the rows
+    r = randperm(size(packets, 1));
+    packets = packets(r, :);
+
+    
+    packetlen = strlength(packets);
+    maxPacketLength = max(packetlen);
+    numPackets = size(packets, 1);
+end
 
 % convert char to hex
-packetlen = strlength(packets);
-maxPacketLength = max(packetlen);
-numPackets = size(packets, 1);
-
-source = zeros(numPackets, maxPacketLength);
-
-for row_idx = 1 : numPackets
-  for str_idx = 1 : packetlen(row_idx)
-      source(row_idx, str_idx) = hex2dec(packets{row_idx}(str_idx));
+if udpTcp
+    sourceUdp = zeros(numPacketsUdp, maxPacketLengthUdp);
+    sourceTcp = zeros(numPacketsTcp, maxPacketLengthTcp);
+    
+    % create udp packets list
+    for row_idx = 1 : numPacketsUdp
+        for str_idx = 1 : packetlenUdp(row_idx)
+            sourceUdp(row_idx, str_idx) = hex2dec(packetsUdp{row_idx}{str_idx});
+        end
+    end
+    % create tcp packets list
+    for row_idx = 1 : numPacketsTcp
+        for str_idx = 1 : packetlenTcp(row_idx)
+            sourceTcp(row_idx, str_idx) = hex2dec(packetsTcp{row_idx}{str_idx});
+        end
+    end
+    
+else
+    source = zeros(numPackets, maxPacketLength);
+    % all packets in one list
+    for row_idx = 1 : numPackets
+    for str_idx = 1 : packetlen(row_idx)
+        source(row_idx, str_idx) = hex2dec(packets{row_idx}(str_idx));
+        end
     end
 end
+
 save(string(numPackets));
 %}
 
 %% choose N pairs with lowest MI/KLD
 
-load('data/28388.mat');
+load('data/1068.mat');
 load('data/ipAddresses');
+
+% port number overlap
+portNumbers = [...
+            % ethernet II
+            % Type: IPv4 (0x0800)
+            0 8 0 0;...
+            % udp port numbers
+            1 15 9 0;...
+            9 11 6 1;...
+            % tcp port numbers
+            0 12 7 9;...
+            0 0 5 0;...
+            0 12 8 0;];
+
+information = zeros(size(ipAddresses,1), size(ipAddresses,2), 2);
+% for majority voting, store the ip addreses
+information(:,:,1) = ipAddresses;
+% for majority voting, store the port numbers
+information(1:size(portNumbers,1), 1:size(portNumbers,2), 2) = portNumbers;
+
+infoUnits = zeros(2);
+infoUnits(1,:) = size(ipAddresses);
+infoUnits(2,:) = size(portNumbers);
 
 % pick packet pairs from list of packets
 numTests = 10000;
 zerosThreshold = 0.8;
+packetLengthThreshold = 800;
 
 % specify the separation test parameters
-nPairs = 1000;
-numAlgos = 4;
+nPairs = 100;
+numAlgos = 2;
 
 % sorts by mse of observations for blind testing
 % sorts by mse of original sources otherwise
 blindTest = true;
 
 % define the metric used for choosing pairs to separate
-%metric = 'maxkld';
+metric = 'maxkld';
 %metric = 'kld';
-metric = 'mi';
+%metric = 'mi';
 
 % define the way in which error is measured
 % mean squared error
@@ -73,8 +137,13 @@ binICA = false;
 % choose N pairs from the packet list
 pairIdx = randi([1, numPackets], numTests, 2);
 testPairs = zeros(numTests, maxPacketLength, 2);
-testPairs(:, :, 1) = source(pairIdx(:, 1), :);
-testPairs(:, :, 2) = source(pairIdx(:, 2), :);
+if udpTcp
+    testPairs(:,:, 1) = sourceUdp(pairIdx(:,1), :);
+    testPairs(:,:, 2) = sourceTcp(pairIdx(:,2), :);
+else
+    testPairs(:, :, 1) = source(pairIdx(:, 1), :);
+    testPairs(:, :, 2) = source(pairIdx(:, 2), :);
+end
 
 % instantiate some variables needed for ica
 base = 2;
@@ -108,7 +177,7 @@ end
 for iterTest = 1 : numTests
     [testSource, testSourceLength] = createTestSource(iterTest, pairIdx, source, packetlen);
     
-    % skip pairings which contain packets which contain more than zerosThreshold 
+    % skip pairings which contain packets containing more than zerosThreshold 
     % percent of zeros
     if ( 1 - nnz(testSource(1,:)) / testSourceLength(1) > zerosThreshold ) || ...
             ( 1 - nnz(testSource(2,:)) / testSourceLength(1) > zerosThreshold )
@@ -125,6 +194,22 @@ for iterTest = 1 : numTests
         % skip the rest of the test
         continue;
     end % check for zeros threshold
+    
+    % skip pairings with an average packet length below threshold
+    if mean(testSourceLength) < packetLengthThreshold
+        % mark the appropriate measures as Inf        
+        if strcmp(metric, 'mi')
+            testMutInfos(iterTest) = Inf;
+        elseif strcmp(metric, 'kld')
+            testKLD(iterTest, 1) = Inf;
+            testKLD(iterTest, 2) = Inf;
+        elseif strcmp(metric, 'maxkld')
+            testKLD(iterTest, 1) = -1;
+            testKLD(iterTest, 2) = -1;
+        end
+        % skip the rest of the test
+        continue;
+    end % end average packet length filter        
     
     % run the pair of packets through network coding
     [observations, mixingMatrix(:,:, iterTest)] = networkCoding(testSource, base, degree);
@@ -221,13 +306,22 @@ mse_mseMinimization = zeros(nPairs, 2, 2);
 scalingFactors_mseMinimization = zeros(nPairs, 2);
 ipv4checksum_mseMinimization = zeros(nPairs, 2);
 
-% results for ip address overlaps algorithm
+%{ results for ip address overlaps algorithm
 pctBytes_ipAddressOverlap = zeros(nPairs, 2, 2);
 pctNibbles_ipAddressOverlap = zeros(nPairs, 2, 2);
 pctBits_ipAddressOverlap = zeros(nPairs, 2, 2);
 mse_ipAddressOverlap = zeros(nPairs, 2, 2);
 scalingFactors_ipAddressOverlap = zeros(nPairs, 2);
 ipv4checksum_ipAddressOverlap = zeros(nPairs, 2);
+%}
+
+% results for majority voting algorithm
+pctBytes_majorityVote = zeros(nPairs, 2, 2);
+pctNibbles_majorityVote = zeros(nPairs, 2, 2);
+pctBits_majorityVote = zeros(nPairs, 2, 2);
+mse_majorityVote = zeros(nPairs, 2, 2);
+scalingFactors_majorityVote = zeros(nPairs, 2);
+ipv4checksum_majorityVote = zeros(nPairs, 2);
 
 % results for packet padding overlaps algorithm
 pctBytes_portNumberOverlap = zeros(nPairs, 2, 2);
@@ -444,13 +538,14 @@ for pairIter = 1 : nPairs
         ipv4checksum = zeros(1,2);
 
         switch iterAlgo
-%             case 1
-%                 % Find the optimal scaling coefficients by maximizing the
-%                 % overlap of signal segments containing neighboring
-%                 % repetitions.
-%                 [scalingFactors_repeatingOverlaps(pairIter, :), bestScore, scaledSourceEstimate]  = ...
-%                  findScalingFactorByMaximizingSignalOverlap(...
-%                     testSource, icaEstimate, base, degree, field, false, icaAlgo);
+%            case 1
+%                  % Find the optimal scaling coefficients by maximizing the
+%                  % overlap of signal segments containing neighboring
+%                  % repetitions.
+%                  [scalingFactors_repeatingOverlaps(pairIter, :), bestScore, scaledSourceEstimate]  = ...
+%                   findScalingFactorByMaximizingSignalOverlap(...
+%                      testSource, icaEstimate, base, degree, field, false, icaAlgo);
+
             case 1
                 % ipv4 checksum
                 [scalingFactors_repeatingOverlaps(pairIter,:), ...
@@ -461,34 +556,18 @@ for pairIter = 1 : nPairs
                 [scalingFactors_mseMinimization(pairIter, :), bestScore, scaledSourceEstimate] = ...
                  findMinMseScalingFactor(...
                     testSource, icaEstimate, base, degree, field, errorFunc, false, icaAlgo);
+            case 3
+                % majority voting
+                [scalingFactors_majorityVote(pairIter, :), scaledSourceEstimate] = ...
+                 scalingFactorByMajorityVoting(information, infoUnits, icaEstimate, base, degree, field, icaAlgo);
+%{
              case 3
                 % ip address overlap
                 [scalingFactors_ipAddressOverlap(pairIter, :), bestScore, scaledSourceEstimate] = ...
                  findScalingFactorByIpAddressMatching(...
                     ipAddresses, icaEstimate, base, degree, field, false, icaAlgo);
+%}                    
              case 4
-                % port number overlap
-                portNumbers = [...
-                            % ethernet II
-                            % Type: IPv4 (0x0800)
-                            0 8 0 0;...
-                            % udp port numbers
-                            1 15 9 0;...
-                            9 11 6 1;...
-                            % tcp port numbers
-                            0 12 7 9;...
-                            0 0 5 0;...
-                            0 12 8 0;...
-                            %{
-                            % html 
-                            % <A HREF=
-                            3 12 4 1 2 0 4 8 5 2 4 5 4 6 3 13; ...
-                            % </A>
-                            3 12 2 15 4 1 3 14; ...
-                            % <img src=
-                            3 12 6 9 6 13  67 2 0 7 3 7 2 6 3 3 13;...
-                            %}
-                            ];
                 [scalingFactors_portNumberOverlap(pairIter, :), bestScore, scaledSourceEstimate] = ...
                  findScalingFactorByIpAddressMatching(...
                     portNumbers, icaEstimate, base, degree, field, false, icaAlgo);
@@ -552,7 +631,7 @@ for pairIter = 1 : nPairs
             icaEstimate = icaEstimate - 1;
             scaledSourceEstimate = scaledSourceEstimate - 1;
         end
-
+        
         % save the results of the scaling tests
         switch iterAlgo
             case 1
@@ -567,12 +646,21 @@ for pairIter = 1 : nPairs
                 pctNibbles_mseMinimization(pairIter, :,:) = pctNibbles;
                 pctBits_mseMinimization(pairIter,:,:) = pctBits;
                 ipv4checksum_mseMinimization(pairIter,:) = ipv4checksum;
+                
+            case 3
+                mse_majorityVote(pairIter,:,:) = mse_algo;
+                pctBytes_majorityVote(pairIter,:,:) = pctBytes;
+                pctNibbles_majorityVote(pairIter, :,:) = pctNibbles;
+                pctBits_majorityVote(pairIter,:,:) = pctBits;
+                ipv4checksum_majorityVote(pairIter,:) = ipv4checksum;                
+%{
             case 3
                 mse_ipAddressOverlap(pairIter,:,:) = mse_algo;
                 pctBytes_ipAddressOverlap(pairIter,:,:) = pctBytes;
                 pctNibbles_ipAddressOverlap(pairIter, :,:) = pctNibbles;
                 pctBits_ipAddressOverlap(pairIter,:,:) = pctBits;
                 ipv4checksum_ipAddressOverlap(pairIter,:) = ipv4checksum;
+%}
             case 4
                 mse_portNumberOverlap(pairIter,:,:) = mse_algo;
                 pctBytes_portNumberOverlap(pairIter,:,:) = pctBytes;
@@ -587,7 +675,7 @@ for pairIter = 1 : nPairs
 end % pairs testing
 
 
-%% summarize the results for each scaling search algorithm
+%% summarize the results for eache scaling search algorithm
 for iterAlgo = 1 : numAlgos
     switch iterAlgo
         case 1
@@ -607,6 +695,15 @@ for iterAlgo = 1 : numAlgos
             ipv4checksum = ipv4checksum_mseMinimization;
             figName = 'MSE_minimization';
         case 3
+            mse_algo = mse_majorityVote;
+            pctBytes = pctBytes_majorityVote;
+            pctNibbles = pctNibbles_majorityVote;
+            pctBits = pctBits_majorityVote;
+            scalingFactors = scalingFactors_majorityVote;
+            ipv4checksum = ipv4checksum_majorityVote;
+            figName = 'majority_voting';            
+%{            
+        case 3
             mse_algo = mse_ipAddressOverlap;
             pctBytes = pctBytes_ipAddressOverlap;
             pctNibbles = pctNibbles_ipAddressOverlap;
@@ -614,6 +711,7 @@ for iterAlgo = 1 : numAlgos
             scalingFactors = scalingFactors_ipAddressOverlap;
             ipv4checksum = ipv4checksum_ipAddressOverlap;
             figName = 'IP_address_matching';
+%}
         case 4
             mse_algo = mse_portNumberOverlap;
             pctBytes = pctBytes_portNumberOverlap;
@@ -624,6 +722,17 @@ for iterAlgo = 1 : numAlgos
             figName = 'port_number_matching';
     end %end switch
 
+    
+    % record whether the ipv4 checksum and the correct bytes match
+    checksumBytesMatch = bitor(                                           ...
+        bitor(...
+        bitand((ipv4checksum(:,1) == 1), (pctBytes(:,1,1) == 100)),  ...
+        bitand((ipv4checksum(:,1) == 1), (pctBytes(:,1,2) == 100))    ...
+                                ) , bitor(                               ...
+        bitand((ipv4checksum(:,2) == 1), (pctBytes(:,2,1) == 100)),  ...
+        bitand((ipv4checksum(:,2) == 1), (pctBytes(:,2,2) == 100))    ...
+                                ));
+                        
     % TODO: include delta mse
     T = table(...
                     packetPairName,...
@@ -657,7 +766,8 @@ for iterAlgo = 1 : numAlgos
                     pctBits(:,1,1),...
                     pctBits(:,1,2),...
                     pctBits(:,2,1),...
-                    pctBits(:,2,2)...                
+                    pctBits(:,2,2),...
+                    checksumBytesMatch...
     );
     %uit.Data = d;
     T.Properties.VariableNames = {...
@@ -693,6 +803,7 @@ for iterAlgo = 1 : numAlgos
                     'pct_bit_a1_s2',...
                     'pct_bit_a2_s1',...
                     'pct_bit_a2_s2',...
+                    'chckSm_pctByt'...
                     };
     T.Properties.Description = figName;
     writetable(T, strcat(testName, '/', figName, ".csv"));

@@ -7,6 +7,6 @@ end % end if
 
 pmf = hist(source, 16)' ./ numel(source);
 
-pmf(pmf == 0) = 0.000001;
+pmf(pmf == 0) = 0.0000001;
 
 end %function

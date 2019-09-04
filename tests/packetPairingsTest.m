@@ -432,7 +432,11 @@ for pairIter = 1 : nPairs
                 % mse minimization
                 [scalingFactors_mseMinimization(pairIter, :), bestScore, scaledSourceEstimate] = ...
                  findMinMseScalingFactor(...
-                    testSource, icaEstimate, base, degree, field, errorFunc, false, icaAlgo);
+                    testSource, icaEstimate, base, degree, field, errorFunc, false, icaAlgo
+            case 3
+                % majority voting
+                [scalingFactors_ipAddressOverlap(pairIter, :), scaledSourceEstimate] = ...
+                 scalingFactorByMajorityVoting(information, infoUnits, icaEstimate, base, degree, field, icaAlgo);
              %{
             case 3
                 % ip address overlap
