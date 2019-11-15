@@ -80,7 +80,7 @@ while k <= K
         ipick = floor(rand * neq);
         % adjust pick for the current index
         pinh = inh + ipick;
-        
+
         % swap the current entropy with the randomly chosen one
         tmph = sorted_entropies(inh);
         tmpi = presort_indx(inh);
