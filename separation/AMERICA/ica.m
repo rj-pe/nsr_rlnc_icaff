@@ -1,6 +1,10 @@
-function [icaEstimate] = ica(observations, testMixingMatrix, testSourceLength, ...
-                              base, degree, binICA)
-
+function [icaEstimate] = ica( ...
+    observations, ...
+    testMixingMatrix, ...
+    testSourceLength, ...
+    base, ...
+    degree, ...
+    binICA)
 % perform separation on the combined signals
 % parameters: 
 % returns the estimated source signals
@@ -14,7 +18,7 @@ if binICA
     % Galois order
     P = base;
     %Observation length
-    T = testSourceLength(1) * 4;
+    T = testSourceLength * 4;
     % convert mixing matrix to binary
     A(1, :) = source2bin(testMixingMatrix(1, :));
     A(2, :) = source2bin(testMixingMatrix(2, :));
@@ -24,7 +28,7 @@ if binICA
 else
     P = base^degree;
     gf_exp = log2(P);
-    T = testSourceLength(1);
+    T = testSourceLength;
     A = gf(testMixingMatrix, 4);
     X = gf(observations, 4);
 end
@@ -82,7 +86,7 @@ if binICA
     Da=mod(Ba*A,P); % 
     Danz=(Da>0); % the non-zero elements of Da
 else
-    Da = Ba * A;
+    Da = Ba * A
     Danz = (Da.x > 0);
 end
 

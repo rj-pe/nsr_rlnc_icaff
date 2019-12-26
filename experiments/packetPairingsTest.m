@@ -59,7 +59,6 @@ errorFunc = @immse;
 % mean absolute error
 %errorFunc = @mae;
 
-
 % separate only non-zero mi/kld values if true
 excludeZeros = false;
 
@@ -81,7 +80,7 @@ degree = 4;
 field = gftuple((-1:base^degree-2)', degree, base); % Construct list of elements.
 % for cobICA
 %non-uniformity threshold
-thre = 0.2;         
+thre = 0.2;
 % struct with some parameters of cobICA
 pm = struct('nCLmax',10,'nCLmin',2,'sigmas',.1,'C0',1,'maxEpoch',300);
 RandStream.setGlobalStream(RandStream('mt19937ar','seed',sum(clock)));
