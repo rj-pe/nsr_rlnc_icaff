@@ -1,5 +1,5 @@
 function [testSource, testSourceLength, testSourceIdx] = ...
-	createTestSource(iterTest, pairIdx, source, packetlen)
+  createTestSource(iterTest, pairIdx, source, packetlen)
 % store the packets being tested into an appropriate length container
 % the shorter packet has zero padding appended to match longer packet length
 testSourceIdx(1) = pairIdx( iterTest, 1);

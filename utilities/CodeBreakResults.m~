@@ -1,0 +1,64 @@
+classdef CodeBreakResults < handle
+  % A CodeBreakResult object logs information from the results
+  % of code breaking attempt to a file.
+  properties (Access = private)
+    ScalingAlgorithmName
+  end % private properties
+  properties
+    ResultsTable table
+  end % public properties
+  methods
+  
+    %%%%%%%%%%%%%%%
+    % constructor %
+    %%%%%%%%%%%%%%%
+    function obj = CodeBreakResults(numPacketsPerCombination, algoName)
+      obj.ScalingAlgorithmName = algoName;
+      tempNames = {'packet'};
+      iTemp = 2;
+      for iIca = 1 : numPacketsPerCombination
+        for iSrc = 1 : numPacketsPerCombination
+          tempNames{iTemp} = "src" + string(iSrc) + "est" + string(iIca);
+          iTemp =+ 1;
+        end
+      end
+      for iIca = 1 : numPacketsPerCombination
+        tempNames = {tempNames, "ipv4" + string(iIca)};
+      end
+      obj.ResultsTable.Properties.VariableNames = tempNames;
+    end % constructor
+
+    % TODO SaveToFile method
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Save code breaking result %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    function SaveResult(obj, PacketCombinationObj)
+      % create row from packet combination
+      addRow = { ...
+        PacketCombinationObj.PacketName, ... 
+        reshape(... % TODO extract only data not names
+          permute(PacketCombinationObj.Results, 2, 1), ...
+          1, []), ...
+        };
+      % add row to table
+      obj.ResultsTable = ...
+        [obj.ResultsTable; addRow];
+    end % RecordResult
+
+  end % methods
+end % class
+      %   'VariableNames', { ...
+      % 'packet name', ...
+      % 'MSE(estimate1, source1)', ... 
+      % % TODO these need to be dynamically generated
+      % '', ...
+      % '', ...
+      % '', ...
+      % '', ...
+      % '', ...
+      % '', ...
+      % '', ...
+      % '', ...
+      % '', ...
+      % '', ...
+      % });
