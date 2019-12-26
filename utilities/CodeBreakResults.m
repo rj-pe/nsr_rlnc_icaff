@@ -6,6 +6,7 @@ classdef CodeBreakResults < handle
   end % private properties
   properties
     ResultsTable
+    ExperimentName
   end % public properties
   methods
   
@@ -18,26 +19,30 @@ classdef CodeBreakResults < handle
                                       algoName ...
                                     )
       obj.ScalingAlgorithmName = algoName;
+      obj.ExperimentName = strcat(datestr(now), "-", obj.ScalingAlgorithmName);
       obj.ResultsTable = createTable(numPacketsPerCombination, numCombinations);
     end % constructor
 
-    % TODO SaveToFile method
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Save code breaking result %
+    % Log code breaking result %
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    function SaveResult(obj, PacketCombinationObj)
+    function LogResult(obj, index, PacketCombinationObj)
       % create row from packet combination
-      addRow = { ...
-        PacketCombinationObj.PacketName, ... 
-        reshape(... % TODO extract only data not names
-          permute(PacketCombinationObj.Results, 2, 1), ...
-          1, []), ...
-        };
+      addRow = cell(1, size(obj.ResultsTable, 2));
+      addRow{1} = PacketCombinationObj.PacketCombinationName;
+      addRow = [addRow(1), PacketCombinationObj.Results(:,2)'];
       % add row to table
-      obj.ResultsTable = ...
-        [obj.ResultsTable; addRow];
-    end % RecordResult
+      obj.ResultsTable(index, :) = addRow;
+    end % LogResult
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Save results table to file %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    function SaveToFile(obj)
+      filename = strcat(obj.ExperimentName, ".xlsx");
+      writetable(obj.ResultsTable, filename);
+      disp(filename + " saved");
+    end
   end % methods
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -48,5 +53,3 @@ classdef CodeBreakResults < handle
   end % private methods
 
 end % class
-
-

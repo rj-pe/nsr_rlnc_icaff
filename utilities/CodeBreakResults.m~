@@ -5,60 +5,51 @@ classdef CodeBreakResults < handle
     ScalingAlgorithmName
   end % private properties
   properties
-    ResultsTable table
+    ResultsTable
+    ExperimentName
   end % public properties
   methods
   
     %%%%%%%%%%%%%%%
     % constructor %
     %%%%%%%%%%%%%%%
-    function obj = CodeBreakResults(numPacketsPerCombination, algoName)
+    function obj = CodeBreakResults( ...
+                                      numCombinations, ...
+                                      numPacketsPerCombination, ...
+                                      algoName ...
+                                    )
       obj.ScalingAlgorithmName = algoName;
-      tempNames = {'packet'};
-      iTemp = 2;
-      for iIca = 1 : numPacketsPerCombination
-        for iSrc = 1 : numPacketsPerCombination
-          tempNames{iTemp} = "src" + string(iSrc) + "est" + string(iIca);
-          iTemp =+ 1;
-        end
-      end
-      for iIca = 1 : numPacketsPerCombination
-        tempNames = {tempNames, "ipv4" + string(iIca)};
-      end
-      obj.ResultsTable.Properties.VariableNames = tempNames;
+      obj.ExperimentName = strcat(datestr(now), "-", obj.ScalingAlgorithmName);
+      obj.ResultsTable = createTable(numPacketsPerCombination, numCombinations);
     end % constructor
 
-    % TODO SaveToFile method
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Save code breaking result %
+    % Log code breaking result %
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    function SaveResult(obj, PacketCombinationObj)
+    function LogResult(obj, index, PacketCombinationObj)
       % create row from packet combination
-      addRow = { ...
-        PacketCombinationObj.PacketName, ... 
-        reshape(... % TODO extract only data not names
-          permute(PacketCombinationObj.Results, 2, 1), ...
-          1, []), ...
-        };
+      addRow = cell(1, size(obj.ResultsTable, 2));
+      addRow{1} = PacketCombinationObj.PacketCombinationName;
+      addRow = [addRow(1), PacketCombinationObj.Results(:,2)'];
       % add row to table
-      obj.ResultsTable = ...
-        [obj.ResultsTable; addRow];
-    end % RecordResult
+      obj.ResultsTable(index, :) = addRow;
+    end % LogResult
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Save results table to file %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    function SaveToFile(obj)
+      filename = strcat(obj.ExperimentName, ".xlsx");
+      writetable(obj.ResultsTable, filename);
+      disp(filename + string("saved"));
+    end
   end % methods
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % method signatures for functions defined in other files %
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
+  methods (Access = private)
+    table = createTable(ppCombo, numCombinations)
+  end % private methods
+
 end % class
-      %   'VariableNames', { ...
-      % 'packet name', ...
-      % 'MSE(estimate1, source1)', ... 
-      % % TODO these need to be dynamically generated
-      % '', ...
-      % '', ...
-      % '', ...
-      % '', ...
-      % '', ...
-      % '', ...
-      % '', ...
-      % '', ...
-      % '', ...
-      % '', ...
-      % });

@@ -1,6 +1,6 @@
 function tableOut = createTable(ppCombo, numCombinations)
-% TODO test this function
-% TODO document this function
+% Creates an empty table with cols = ppComb^2 + 1 and rows = numCombinations.
+% Each row represents the results of a code breaking experiment.
   tempNames = {'packet'};
   iTemp = 2;
   for iIca = 1 : ppCombo
@@ -19,7 +19,7 @@ function tableOut = createTable(ppCombo, numCombinations)
     iTemp = iTemp + 1;
   end
   varTypes = {'string'};
-  for iVar = 2 : iTemp -1
+  for iVar = 2 : iTemp - 1
     varTypes{iVar} = 'double';
   end
   tableOut = table( ...

@@ -4,14 +4,11 @@
 load('28388.mat', 'packets9')
 index1 = randi([1 39], 1); index2 = randi([1 39], 1);
 testSource = {packets9(index1); packets9(index2)};
-packetLength = min(strlength(testSource{1}), strlength(testSource{2}));
 packetComboName = string(index1) + "*" + string(index2);
 
 % create an instance of the PacketCombination class
 disp("Construct the PacketCombination object")
-combo = PacketCombination(2, 4, packetComboName, packetLength, ...
-  testSource{1}, ...
-  testSource{2})
+combo = PacketCombination(2, 4, packetComboName, 2, testSource);
 
 disp('************************ packet data **********************************');
 combo.PacketData(1,1:20)
