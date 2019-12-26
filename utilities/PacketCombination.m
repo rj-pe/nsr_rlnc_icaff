@@ -28,11 +28,14 @@ classdef PacketCombination < handle
                                     packetName, ...
                                     maxPackLen, ...
                                     varargin...
-                                    )
+                                    ) % source
       % user-defined values
       % TODO pass in only a single array of packets instead of multiple packets
+      % TODO add numPacketsCombined as a function parameter
       obj.PacketCombinationName = packetName;
-      obj.NumberOfPacketsCombined = nargin - 4;        
+      %obj.NumberOfPacketsCombined = numPacketsCombined;
+
+      obj.NumberOfPacketsCombined = nargin - 4;
       obj.PacketData = zeros(obj.NumberOfPacketsCombined, maxPackLen);
       source = varargin';
       for iSrc = 1 : obj.NumberOfPacketsCombined % store source packets

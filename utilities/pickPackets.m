@@ -1,7 +1,8 @@
 function [packets, packetName] = ...
   pickPackets(packetPool, minimumPacketLength, nPackets)
   % Combines nPackets number of packets that are at least minimumPacketLength
-  % long. Packets are chosen from packetPool.
+  % long. Packets are chosen from packetPool. The packetName is constructed
+  % by concatenating the indices (from the orignal pool) of the chosen packets.
   packets = cell(nPackets, 1);
   indexBound = size(packetPool, 1);
   for iPacket = 1 : nPackets
