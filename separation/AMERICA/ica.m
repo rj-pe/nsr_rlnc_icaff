@@ -10,7 +10,8 @@ function [icaEstimate] = ica( ...
 % returns the estimated source signals
 
 % working parameters
-% Number of sources
+% Number of sources 
+% TODO: test with K as an arbitrary numerical parameter.
 K = 2;
 
 if binICA
