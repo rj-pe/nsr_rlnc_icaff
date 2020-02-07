@@ -35,18 +35,29 @@ The constructor takes five parameters:
 
 ### Available methods:
 
-* ``Combine()`` 
+* [``Combine()``](https://github.com/rj-pe/nsr_rlnc_icaff/blob/4a15ac9e88c64435a3bb53a266b519cbd9a0f612/utilities/PacketCombination.m#L72)
   - Combine packets using 
   [``networkCoding()``](../utilities/networkCoding.m).
-* ``Separate()`` 
+
+* [``Separate()``](https://github.com/rj-pe/nsr_rlnc_icaff/blob/4a15ac9e88c64435a3bb53a266b519cbd9a0f612/utilities/PacketCombination.m#L83) 
   - Separate packets using
   [``ica()``](../separation/AMERICA/ica.m).
-* ``FindScalingFactors(scalingAlgorithmNameString)`` 
+
+* [``FindScalingFactors( scalingAlgorithmHandle )``](https://github.com/rj-pe/nsr_rlnc_icaff/blob/4a15ac9e88c64435a3bb53a266b519cbd9a0f612/utilities/PacketCombination.m#L97)
   - Find optimal scaling factors for ICA packet estimates.
   
-  * Options for scaling factor algorithm parameter ``scalingAlgorithmNameString``:
+  * The scaling factor algorithm parameter should be a function handle.
+  Available functions:
     * [``findScalingFactorByChecksum``](../scalingAlgorithms/findScalingFactorByChecksum.m)
     * [``findMinMseScalingFactor``](../scalingAlgorithms/findMinMseScalingFactor.m)
+
+* [``ComputeCodeBreakResults( metric )``](https://github.com/rj-pe/nsr_rlnc_icaff/blob/4a15ac9e88c64435a3bb53a266b519cbd9a0f612/utilities/PacketCombination.m#L125)
+  - Calculates the rate of success of a codebreaking attempt by comparing the
+   scaled estimated packet with the original. 
+   
+  * The metric parameter should be a function handle. Available functions:
+      * [``immse()``](https://www.mathworks.com/help/images/ref/immse.html)
+      * [``calculatePctBytesCorrect()``](../utilities/calculatePctBytesCorrect.m)
 
 ### Source
 
@@ -89,7 +100,8 @@ E.g. passing the string ``"checksum"``produces a filename:
 
 A codebreaking attempt can be saved to memory by calling ``LogResult()``.
 
-Each attempt is stored as a row in a Matlab [Table](https://www.mathworks.com/help/matlab/ref/table.html) object.
+Each attempt is stored as a row in a Matlab 
+[Table](https://www.mathworks.com/help/matlab/ref/table.html) object.
 
 ```Matlab
 r.LogResult(combinationObjectIndex, packetCombinationObject);
