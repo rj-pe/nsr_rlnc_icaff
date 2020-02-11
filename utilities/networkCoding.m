@@ -1,9 +1,10 @@
-% quick & dirty version of cascaded network coding
 function [encodedPackets, randomCoefficients] = ...
   networkCoding(receivedPackets, base, degree)%, field)
+% Description: Cascaded network coding using gf matrix multiplication.
 
 numPackets = size(receivedPackets, 1);
 alphabetSize = base^ degree;
+
 receivedPacketsGf = gf(receivedPackets, degree);
 
 % generate matrix of random coefficients

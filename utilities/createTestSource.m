@@ -1,5 +1,7 @@
 function [testSource, testSourceLength, testSourceIdx] = ...
   createTestSource(iterTest, pairIdx, source, packetlen)
+% This function is deprecated, marked for removal in later release.
+
 % store the packets being tested into an appropriate length container
 % the shorter packet has zero padding appended to match longer packet length
 testSourceIdx(1) = pairIdx( iterTest, 1);

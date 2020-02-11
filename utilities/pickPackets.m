@@ -7,14 +7,17 @@ function [packets, packetName] = ...
   indexBound = size(packetPool, 1);
   for iPacket = 1 : nPackets
     randomInteger = randi([1 indexBound], 1);
+    % ensure we have met the minimum packet length requirement
     while(strlength(packetPool(randomInteger)) < minimumPacketLength)
       randomInteger = randi([1 indexBound], 1);
     end
+    % Create name string
     if iPacket > 1
       packetName = packetName + "*" + string(randomInteger);
     else
       packetName = string(randomInteger);
     end
+    % Add packet to output
     packets{iPacket, 1} = packetPool(randomInteger);
   end
 end % function

@@ -103,6 +103,8 @@ while k <= K
     TLex = Lex(1 : k, 2 : P^k);
     % ???
     % matrix multiply in GF(2^m)
+    % NOTE: This matrix multiplication takes up 99% of the computation time.
+    %       This is based on a code profile for a trial with 5 combined sources.
     test0 = Bb * TLex;
     % if any of the vectors in the test were l.d. then they would be
     % additive inverses in GF and fail this test.

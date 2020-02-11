@@ -12,7 +12,6 @@ function [icaEstimate] = ica( ...
 
 % working parameters
 % Number of sources 
-% TODO: test with K as an arbitrary numerical parameter.
 K = numSources;
 
 if binICA
@@ -31,8 +30,9 @@ else
     P = base^degree;
     gf_exp = log2(P);
     T = testSourceLength;
-    A = gf(testMixingMatrix, 4);
-    X = gf(observations, 4);
+    % TODO Modify number of symbols in alphabet below.
+    A = gf(testMixingMatrix, degree);
+    X = gf(observations, degree);
 end
 
 PK=P^K;
@@ -88,15 +88,15 @@ if binICA
     Da=mod(Ba*A,P); % 
     Danz=(Da>0); % the non-zero elements of Da
 else
-    Da = Ba * A
+    Da = Ba * A;
     Danz = (Da.x > 0);
 end
 
 sca=sum(sum(Danz,2)==1);
 if sca==K
-    disp('AMERICA: succeeded')
+    disp('AMERICA: succeeded');
 else
-    disp('AMERICA: failed')
+    disp('AMERICA: failed');
 end
 
 if binICA

@@ -17,7 +17,7 @@ for iterEstSrc = 1 : numSources
     % construct a test source (only the ipv4 checksum section of the packet)
     testSource = zeros(1, 40);
     testSource(1,:) = ...
-      vecMultGf(iterSclCoeff, estimatedSource(iterEstSrc, 29:68), field, icaAlgo);
+      vecMultGf(iterSclCoeff, estimatedSource(iterEstSrc, 29:68), field, degree, icaAlgo);
     % check & store the IPv4 checksum of the scaled estimate 
     results(iterSclCoeff, iterEstSrc) = verifyIPv4Checksum(testSource, 1);
   end
@@ -43,7 +43,7 @@ end
 % construct the final scaled estimates
 for iterSrc = 1 : numSources
   scaledSourceEstimate(iterSrc,:) = ...
-    vecMultGf(scalingFactor(iterSrc), estimatedSource(iterSrc, :), field, icaAlgo);
+    vecMultGf(scalingFactor(iterSrc), estimatedSource(iterSrc, :), field, degree, icaAlgo);
 end  
 
 %scaledSourceEstimate(2,:) = ...

@@ -34,25 +34,16 @@ classdef PacketCombination < handle
       % user-defined values
       obj.PacketCombinationName = packetName;
       obj.NumberOfPacketsCombined = numPacketsCombined;
-      % Figure out which packet has less bytes.
-      % Set that number of bytes as the combination's maximum packet length.
-      tempLength = zeros(obj.NumberOfPacketsCombined, 1);
-      for iSrc = 1 : obj.NumberOfPacketsCombined
-        tempLength(iSrc) = strlength(source{iSrc});
-      end
-      obj.MaximumPacketLength = min(tempLength);
-
-      % Store the char array source data as doubles in this object.
-      obj.PacketData = zeros( ...
-                              obj.NumberOfPacketsCombined, ...
-                              obj.MaximumPacketLength ...
-                            );
-      for iSrc = 1 : obj.NumberOfPacketsCombined % store source packets
-        for jStr = 1 : obj.MaximumPacketLength
-          obj.PacketData(iSrc, jStr) = hex2dec(source{iSrc}{1}(jStr));
-        end % for jStr
-      end % for iSrc
-
+      % Create numberical arrays which represent packet data.
+      % This method compresses packet data if the degree of the
+      % field size is larger than four.
+      [ ...
+      obj.PacketData, ...
+      obj.MaximumPacketLength ] = distributeSymbols( ...
+                                    source, ...
+                                    obj.NumberOfPacketsCombined, ...
+                                    degree ...
+                                    );
       obj.Base = base;
       obj.Degree = degree;       
       obj.Field = ...
