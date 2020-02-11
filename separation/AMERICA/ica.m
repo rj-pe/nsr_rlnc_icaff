@@ -30,7 +30,6 @@ else
     P = base^degree;
     gf_exp = log2(P);
     T = testSourceLength;
-    % TODO Modify number of symbols in alphabet below.
     A = gf(testMixingMatrix, degree);
     X = gf(observations, degree);
 end
