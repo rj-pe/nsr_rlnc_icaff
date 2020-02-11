@@ -1,21 +1,27 @@
-% test of CodeBreakResults class
+% Test which varies field size from 4 to maxFieldSize.
 
-% load packet data
+% Load packet data.
+% Note that the character array which is loaded here is used with pickPackets()
+% in the experiment below.
 load('28388.mat', 'packets6');
 
-% experimental parameters
+% Define the parameters for this experiment.
 % How many packet combinations in the experiment?
-numCombinations = 4;
+numCombinations = 10;
+% Should we reject packets which are extremely short in length?
 minimumPacketLength = 50;
-maxPacketsPerCombination = 10;
+% How large a field should we test?
+maxFieldSize = 8;
+% Do not change.
 base = 2;
-degree = 4;
+% How many packets will be combined in a single run?
+numPacketsPerCombination = 2;
 % start experiment
-for iNumPacketsPerCombination = 2 : maxPacketsPerCombination  
+for iFieldSize = 4 : maxFieldSize
   % Create a CodeBreakResult object to keep track of experiment results.
   experimentResults = CodeBreakResults( ...
                                         numCombinations, ...
-                                        iNumPacketsPerCombination, ...
+                                        numPacketsPerCombination, ...
                                         "checksum" ...
                                       );
   % Each iteration combines & subsequently separates packets.
@@ -31,9 +37,9 @@ for iNumPacketsPerCombination = 2 : maxPacketsPerCombination
     % Create the packet combination object.
     combo  = PacketCombination( ...
                                 base, ...
-                                degree, ...
+                                iFieldSize, ...
                                 sourceName, ...
-                                iNumPacketsPerCombination, ...
+                                numPacketsPerCombination, ...
                                 source ...
                               );
     % Combine the packets using network coding.
@@ -44,9 +50,9 @@ for iNumPacketsPerCombination = 2 : maxPacketsPerCombination
     combo.FindScalingFactors(@findScalingFactorByChecksum);
     % Compare the code breaking estimate to the original packet content.
     combo.ComputeCodeBreakResults(@immse);
-    % Record the result of this experiment.
+    % Record the result of this code breaking attempt.
     experimentResults.LogResult(iExp, combo)
-  end % experiments loop
-  % Save results to an Excel file.
+  end % Experiments loop.
+  % Save experimental results to an Excel file.
   experimentResults.SaveToFile();
-end % varying sources loop
+end % Varying field size loop.
