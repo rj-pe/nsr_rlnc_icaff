@@ -28,7 +28,6 @@ for iSrc = 1 : numberOfPacketsCombined % store source packets
     packetData(iSrc, jStr) = hex2dec(source{iSrc}{1}(jStr));
   end % for jStr
 end % for iSrc
-% TODO: tempPacketData has dynamic sizing in the for loop below, how to fix?
 numBits = maximumPacketLength * 4;
 padBits = mod(numBits, degree) * 4;
 tempPacketData = zeros(numberOfPacketsCombined, numBits + padBits);
