@@ -27,7 +27,7 @@ provided in this class.
 The constructor takes five parameters:
 * the prime base (P) for constructing a Galois field of the form, P^N,
 * the degree (N) of the Galois field (determines the number of elements in the 
-  field), [Note](#Note:)
+  field), [Note](#note)
 * a unique string (can be used as an identifier for the object),
 * the number of packets to be combined,
 * the packets to be combined (see [Source](#source) for a detailed explanation
