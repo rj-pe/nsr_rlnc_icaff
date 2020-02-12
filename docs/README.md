@@ -27,12 +27,15 @@ provided in this class.
 The constructor takes five parameters:
 * the prime base (P) for constructing a Galois field of the form, P^N,
 * the degree (N) of the Galois field (determines the number of elements in the 
-  field),
+  field),**(Note)[#Note on degree]
 * a unique string (can be used as an identifier for the object),
 * the number of packets to be combined,
 * the packets to be combined (see [Source](#source) for a detailed explanation
   of the required interface).
 
+####Note on degree:
+Any degree can be used, but the (ipv4 checksum)[https://github.com/rj-pe/nsr_rlnc_icaff/blob/4ebd52a962029f9c4a0b26c6afd9088a941405a3/scalingAlgorithms/findScalingFactorByChecksum.m#L1]
+method only supports GF(2^4).
 ### Available methods:
 
 * [``Combine()``](https://github.com/rj-pe/nsr_rlnc_icaff/blob/4a15ac9e88c64435a3bb53a266b519cbd9a0f612/utilities/PacketCombination.m#L72)
