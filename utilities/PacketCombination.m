@@ -11,6 +11,7 @@ classdef PacketCombination < handle
     NumberOfPacketsCombined
     CodingCoefficients
     ScalingCoefficients
+    ScalingAlgorithm
     PacketEstimate
     Results cell
   end % public properties
@@ -92,6 +93,7 @@ classdef PacketCombination < handle
     function FindScalingFactors(obj, scalingAlgorithm) %
       % Uses the scaling algorithm specified by the function handle parameter
       % to find the optimal scaling factors of an ICA estimate.
+      obj.ScalingAlgorithm = scalingAlgorithm;
       if (strcmp(func2str(scalingAlgorithm), "findScalingFactorByChecksum"))
         [obj.ScalingCoefficients, obj.PacketEstimate] = ...
           scalingAlgorithm(...
@@ -135,17 +137,27 @@ classdef PacketCombination < handle
             resultRows = resultRows + 1;
           end % end inner loop for error function parameter
         end % end outer loop for error function parameter
-
-        % Calculate the IPv4 checksum of each scaled source estimate
-        for iIca = 1 : obj.NumberOfPacketsCombined
-          obj.Results(resultRows, :) = ...                   %   Result -> Cell.
-          { ...
-          "ipv4" + string(iIca), ...                         %      Column Name.
-          verifyIPv4Checksum( ...                            %   Error function.
-            obj.PacketEstimate(iIca, :))
-          };
-          resultRows = resultRows + 1;
-        end % IPv4 checksum calculation
+        if strcmp(func2str(obj.ScalingAlgorithm), "findScalingFactorByChecksum")
+          % Calculate the IPv4 checksum of each scaled source estimate
+          for iIca = 1 : obj.NumberOfPacketsCombined
+            obj.Results(resultRows, :) = ...                   %   Result -> Cell.
+            { ...
+            "ipv4" + string(iIca), ...                         %      Column Name.
+            verifyIPv4Checksum( ...                            %   Error function.
+              obj.PacketEstimate(iIca, :))
+            };
+            resultRows = resultRows + 1;
+          end % IPv4 checksum calculation
+        else
+            % Mark entries as NaN, because ipv4 checksum is undef. for
+            % gf(n~=16). When a decision is made regarding the checksum
+            % calculation for such fields this exception should be
+            % adjusted.
+            for iIca = 1 : obj.NumberOfPacketsCombined
+              obj.Results(resultRows, :) = {"ipv4" + string(iIca), nan};
+              resultRows = resultRows + 1;
+            end
+        end
     end % function compute results
   end % methods
 
