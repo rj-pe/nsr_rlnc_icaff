@@ -1,5 +1,4 @@
-function [encodedPackets, randomCoefficients] = ...
-  networkCoding(receivedPackets, base, degree)%, field)
+function [encodedPackets, randomCoefficients] = networkCoding(receivedPackets, base, degree)
 % Description: Cascaded network coding using gf matrix multiplication.
 
 numPackets = size(receivedPackets, 1);
