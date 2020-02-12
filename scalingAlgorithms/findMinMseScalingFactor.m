@@ -33,7 +33,7 @@ for iterEstSrc = 1 : numSources
 		testSource = zeros(1, rowLength);
 		% elementwise multiplication of est. source by scaling coefficient
 		testSource(1, :) = ...
-			vecMultGf(iterSclCoeff, estimatedSource(iterEstSrc, :), field, icaAlgo);
+			vecMultGf(iterSclCoeff, estimatedSource(iterEstSrc, :), field, degree, icaAlgo);
         
 		% measure correlation between the test signal and each of the sources
 		% store each correlation result in the row corresponding to its factor
@@ -60,8 +60,8 @@ scalingFactor(src1) = minCoeff1;
 scalingFactor(src2) = minCoeff2;
 
 scaledSourceEstimate = zeros(numSources, size(source, 2));
-scaledSourceEstimate(src1, :) = vecMultGf(minCoeff1, estimatedSource(src1, :), field, icaAlgo);
-scaledSourceEstimate(src2, :) = vecMultGf(minCoeff2, estimatedSource(src2, :), field, icaAlgo);
+scaledSourceEstimate(src1, :) = vecMultGf(minCoeff1, estimatedSource(src1, :), field, degree, icaAlgo);
+scaledSourceEstimate(src2, :) = vecMultGf(minCoeff2, estimatedSource(src2, :), field, degree, icaAlgo);
 
 if plotBool
 %% plotting correlations

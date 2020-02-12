@@ -38,25 +38,14 @@ if degree > 4
     % Convert to binary (each row represents a character in packet).
     binData = de2bi(packetData(iRow,:));
     % Calculate the necessary padding.
-    iPad = mod(numel(binData), degree);
-    if iPad > 0
-      % Decide whether:
-      % rem((degree - iPad) + size(binData,1), degree) == 0 or 
-      % rem(iPad + size(binData,1), degree) == 0
-      if rem((degree - iPad) + size(binData,1), degree) == 0
-        iPad = degree - iPad
-      end
-      % Add zero padding at the tail of the source packet.
-      paddedBinData = vertcat(binData, zeros(iPad, size(binData, 2)));
-    else
-      % No padding needed.
-      paddedBinData = binData;
-    end  
-    % Each column represents a symbol (needed for reshape).
-    paddedBinData = paddedBinData';
+    iPad = degree - rem(numel(binData), degree);
+    % Transpose binary data, & reshape as a 1x vector (Makes padding easy).
+    binVector = reshape(binData', numel(binData), 1);
+    % Add zero padding at the tail of the source packet.
+    binVector = [binVector', zeros(1, iPad)];
     % This operation shifts the cut-off for each symbol, such that each symbol
     % is described by N (= degree) bits. 
-    paddedBinData = reshape(paddedBinData, degree, []);
+    paddedBinData = reshape(binVector, degree, []);
     % Transposing binary data necessary b/c bi2de does row-wise transformation
     % Transposing the decimal result necessary b/c packets are stored as rows.
     tempLength =  size(bi2de(paddedBinData')', 2);
@@ -74,12 +63,3 @@ packetData = tempPacketData(:, 1:maximumPacketLength);
 
 end % function
 
-% example for sanity checks:
-% src     = [ 3 0 9 ]
-% degree  = 5
-% binData = de2bi(src)
-% pad     = mod(numel(binData), degree)
-% binData = vertcat(binData, zeros(pad, size(binData, 2)))
-% binData = binData'
-% binData = reshape(binData, degree, [])
-% src     = bi2de(binData')'  
